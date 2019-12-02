@@ -1,4 +1,5 @@
 from django.db import models, transaction
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.forms.models import model_to_dict
@@ -477,7 +478,7 @@ class TargetList(models.Model):
     :type modified: datetime
     """
     name = models.CharField(max_length=200, help_text='The name of the target list.')
-    targets = models.ManyToManyField(Target)
+    targets = models.ManyToManyField(Target, through='TargetListTargets', through_fields=('targetlist', 'target'))
     created = models.DateTimeField(
         auto_now_add=True, help_text='The time which this target list was created in the TOM database.'
     )
@@ -491,3 +492,15 @@ class TargetList(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TargetListTargets(models.Model):
+    targetlist = models.ForeignKey(TargetList, on_delete=models.CASCADE)
+    target = models.ForeignKey(Target, on_delete=models.CASCADE)
+    priority = models.CharField(max_length=50,
+                                blank=True,
+                                help_text='Priority level to observe this target, as compared with the remaining \
+                                    targets in the grouping')
+
+    class Meta:
+        db_table = 'tom_targets_targetlist_targets'
