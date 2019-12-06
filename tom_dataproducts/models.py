@@ -128,6 +128,7 @@ class DataProduct(models.Model):
     :type observation_record: ObservationRecord
 
     :param data: The file this object refers to.
+    :type data: django.core.files.File
 
     :param extra_data: Arbitrary text field for storing additional information about this object.
     :type extra_data: str
@@ -329,6 +330,9 @@ class ReducedDatum(models.Model):
     source_location = models.CharField(max_length=200, default='')
     timestamp = models.DateTimeField(null=False, blank=False, default=datetime.now, db_index=True)
     value = models.TextField(null=False, blank=False)
+
+    class Meta:
+        get_latest_by = ('timestamp',)
 
     def save(self, *args, **kwargs):
         for dp_type, dp_values in settings.DATA_PRODUCT_TYPES.items():
