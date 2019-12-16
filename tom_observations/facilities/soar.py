@@ -4,6 +4,7 @@ from django.core.cache import cache
 
 from tom_observations.facilities.lco import LCOFacility, LCOBaseObservationForm
 from tom_observations.facilities.lco import LCOImagingObservationForm, LCOSpectroscopyObservationForm
+from tom_observations.facility import ObservingSite
 from tom_common.exceptions import ImproperCredentialsException
 
 
@@ -97,12 +98,7 @@ class SOARFacility(LCOFacility):
     # planning tool. All entries should contain latitude, longitude, elevation
     # and a code.
     SITES = {
-        'Cerro Pachón': {
-            'sitecode': 'sor',
-            'latitude': -30.237892,
-            'longitude': -70.733642,
-            'elevation': 2000
-        }
+        'sor': ObservingSite('sor', 'SOAR', 'Cerro Pachón', -30.237892, -70.733642, 2000)
     }
 
     def get_form(self, observation_type):

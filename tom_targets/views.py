@@ -9,30 +9,35 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.db import transaction
+from django.db.models import ExpressionWrapper, F, FloatField
 from django.http import QueryDict, StreamingHttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.utils.text import slugify
 from django.utils.safestring import mark_safe
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic import TemplateView, View
 from django_filters.views import FilterView
-
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin
 from guardian.shortcuts import get_objects_for_user, get_groups_with_perms, assign_perm
+import plotly.graph_objs as go
+from plotly import offline
 
 from tom_common.hints import add_hint
 from tom_common.hooks import run_hook
 from tom_targets.models import Target, TargetList
 from tom_targets.forms import (
-    SiderealTargetCreateForm, NonSiderealTargetCreateForm, TargetExtraFormset, TargetNamesFormset
+    SiderealTargetCreateForm, NonSiderealTargetCreateForm, TargetGroupingVisibilityForm,
+    TargetExtraFormset, TargetNamesFormset
 )
 from tom_targets.utils import import_targets, export_targets
 from tom_targets.filters import TargetFilter
 from tom_targets.groups import add_all_to_grouping, add_selected_to_grouping
 from tom_targets.groups import remove_all_from_grouping, remove_selected_from_grouping
+from tom_observations.facility import get_service_class, get_service_classes
+from tom_observations.utils import get_sidereal_visibility
 from tom_dataproducts.forms import DataProductUploadForm
 
 logger = logging.getLogger(__name__)
@@ -48,6 +53,11 @@ class TargetListView(PermissionListMixin, FilterView):
     model = Target
     filterset_class = TargetFilter
     permission_required = 'tom_targets.view_target'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs.annotate(redshift=ExpressionWrapper(F('targetextra__value'), FloatField())).order_by('redshift')
+        return qs
 
     def get_context_data(self, *args, **kwargs):
         """
@@ -479,3 +489,14 @@ class TargetGroupingCreateView(LoginRequiredMixin, CreateView):
         assign_perm('tom_targets.change_targetlist', self.request.user, obj)
         assign_perm('tom_targets.delete_targetlist', self.request.user, obj)
         return super().form_valid(form)
+
+
+class TargetGroupingDetailView(DetailView):
+    template_name = 'tom_targets/targetgroup_detail.html'
+    model = TargetList
+    form_class = TargetGroupingVisibilityForm
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['visibility_form'] = TargetGroupingVisibilityForm()
+        return context

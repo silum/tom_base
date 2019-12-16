@@ -1,16 +1,17 @@
+import logging
+
 from astropy.coordinates import get_sun, SkyCoord
 from astropy import units
 from astropy.time import Time
 from astroplan import Observer, FixedTarget, time_grid_from_range
 import numpy as np
-import logging
 
 from tom_observations import facility
 
 logger = logging.getLogger(__name__)
 
 
-def get_sidereal_visibility(target, start_time, end_time, interval, airmass_limit):
+def get_sidereal_visibility(targets, start_time, end_time, interval, airmass_limit, sites=None):
     """
     Uses astroplan to calculate the airmass for a sidereal target
     for each given interval between the start and end times.
@@ -21,6 +22,9 @@ def get_sidereal_visibility(target, start_time, end_time, interval, airmass_limi
 
     Important note: only works for sidereal targets! For non-sidereal visibility, see here:
     https://github.com/TOMToolkit/tom_nonsidereal_airmass
+
+    :param targets: list of Target objects for which to calculate the airmass
+    :type targets: list of Targets
 
     :param start_time: start of the window for which to calculate the airmass
     :type start_time: datetime
@@ -41,11 +45,12 @@ def get_sidereal_visibility(target, start_time, end_time, interval, airmass_limi
     :rtype: dict
     """
 
-    if target.type != 'SIDEREAL':
-        msg = '\033[1m\033[91mAirmass plotting is only supported for sidereal targets\033[0m'
-        logger.info(msg)
-        empty_visibility = {}
-        return empty_visibility
+    for target in targets:
+        if target.type != 'SIDEREAL':
+            msg = '\033[1m\033[91mAirmass plotting is only supported for sidereal targets\033[0m'
+            logger.info(msg)
+            empty_visibility = {}
+            return empty_visibility
 
     if end_time < start_time:
         raise Exception('Start must be before end')
@@ -53,17 +58,23 @@ def get_sidereal_visibility(target, start_time, end_time, interval, airmass_limi
     if airmass_limit is None:
         airmass_limit = 10
 
-    body = FixedTarget(name=target.name, coord=SkyCoord(target.ra, target.dec, unit='deg'))
+    if not sites:
+        sites = []
+        for observing_facility in facility.get_service_classes():
+            observing_facility_class = facility.get_service_class(observing_facility)()
+            facility_sites = observing_facility_class.get_observing_sites()
+            sites += [site_details for sitecode, site_details in facility_sites.items()]
+
+    sun, time_range = get_astroplan_sun_and_time(start_time, end_time, interval)
 
     visibility = {}
-    sun, time_range = get_astroplan_sun_and_time(start_time, end_time, interval)
-    for observing_facility in facility.get_service_classes():
-        observing_facility_class = facility.get_service_class(observing_facility)
-        sites = observing_facility_class().get_observing_sites()
-        for site, site_details in sites.items():
-            observer = Observer(longitude=site_details.get('longitude')*units.deg,
-                                latitude=site_details.get('latitude')*units.deg,
-                                elevation=site_details.get('elevation')*units.m)
+    for site in sites:
+        observer = Observer(longitude=site.longitude * units.deg,
+                            latitude=site.latitude * units.deg,
+                            elevation=site.elevation * units.m)
+
+        for target in targets:
+            body = FixedTarget(name=target.name, coord=SkyCoord(target.ra, target.dec, unit='deg'))
 
             sun_alt = observer.altaz(time_range, sun).alt
             obj_airmass = observer.altaz(time_range, body).secz
@@ -76,7 +87,12 @@ def get_sidereal_visibility(target, start_time, end_time, interval, airmass_limi
 
             obj_airmass = [None if i in bad_indices else float(airmass) for i, airmass in enumerate(obj_airmass)]
 
-            visibility[f'({observing_facility}) {site}'] = (time_range.datetime, obj_airmass)
+            site_visibility = {
+                'site': site,
+                'airmass_data': (time_range.datetime, obj_airmass)
+            }
+            visibility.setdefault(target.name, []).append(site_visibility)
+
     return visibility
 
 

@@ -1,0 +1,19 @@
+{% extends 'tom_common/base.html' %}
+{% load bootstrap4 targets_extras %}
+{% block title %}
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    {% targetgrouping_plan %}
+  </div>
+  <div class="col-md-4">
+    <h4>Targets in this group:</h4>
+    <ul style="list-style: none">
+    {% for target in object.targets.all %}
+      <li><a href="{% url 'targets:detail' target.id %}">{{ target }}</a></li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock content %}

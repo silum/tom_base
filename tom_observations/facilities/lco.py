@@ -8,7 +8,7 @@ from astropy import units as u
 
 from tom_observations.facility import GenericObservationForm
 from tom_common.exceptions import ImproperCredentialsException
-from tom_observations.facility import GenericObservationFacility, get_service_class
+from tom_observations.facility import GenericObservationFacility, get_service_class, ObservingSite
 from tom_targets.models import (
     Target, REQUIRED_NON_SIDEREAL_FIELDS,
     REQUIRED_NON_SIDEREAL_FIELDS_PER_SCHEME
@@ -319,46 +319,14 @@ class LCOFacility(GenericObservationFacility):
     name = 'LCO'
     observation_types = [('IMAGING', 'Imaging'), ('SPECTRA', 'Spectroscopy')]
     # The SITES dictionary is used to calculate visibility intervals in the
-    # planning tool. All entries should contain latitude, longitude, elevation
-    # and a code.
-    # TODO: Flip sitecode and site name
+    # planning tool.
     SITES = {
-        'Siding Spring': {
-            'sitecode': 'coj',
-            'latitude': -31.272,
-            'longitude': 149.07,
-            'elevation': 1116
-        },
-        'Sutherland': {
-            'sitecode': 'cpt',
-            'latitude': -32.38,
-            'longitude': 20.81,
-            'elevation': 1804
-        },
-        'Teide': {
-            'sitecode': 'tfn',
-            'latitude': 20.3,
-            'longitude': -16.511,
-            'elevation': 2390
-        },
-        'Cerro Tololo': {
-            'sitecode': 'lsc',
-            'latitude': -30.167,
-            'longitude': -70.804,
-            'elevation': 2198
-        },
-        'McDonald': {
-            'sitecode': 'elp',
-            'latitude': 30.679,
-            'longitude': -104.015,
-            'elevation': 2027
-        },
-        'Haleakala': {
-            'sitecode': 'ogg',
-            'latitude': 20.706,
-            'longitude': -156.258,
-            'elevation': 3065
-        }
+        'coj': ObservingSite('coj', 'LCO', 'Siding Spring', -31.272, 149.07, 1116),
+        'cpt': ObservingSite('cpt', 'LCO', 'Sutherland', -32.38, 20.81, 1804),
+        'tfn': ObservingSite('tfn', 'LCO', 'Teide', 20.3, -16.511, 2390),
+        'lsc': ObservingSite('lsc', 'LCO', 'Cerro Tololo', -30.167, -70.804, 2198),
+        'elp': ObservingSite('elp', 'LCO', 'McDonald', 30.679, -104.015, 2027),
+        'ogg': ObservingSite('ogg', 'LCO', 'Haleakala', 20.706, -156.258, 3065)
     }
 
     def get_form(self, observation_type):
@@ -417,6 +385,9 @@ class LCOFacility(GenericObservationFacility):
 
     def get_observing_sites(self):
         return self.SITES
+
+    def get_site(self, sitecode):
+        return self.SITES[sitecode]
 
     def get_observation_status(self, observation_id):
         response = make_request(

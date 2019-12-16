@@ -4,6 +4,7 @@ import requests
 from abc import ABC, abstractmethod
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout
+from dataclasses import dataclass
 from django import forms
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -209,6 +210,13 @@ class GenericObservationFacility(ABC):
         """
         pass
 
+    def get_site(self, sitecode):
+        """
+        Returns the data for a specific site given the sitecode.
+        """
+        pass
+
+
     @abstractmethod
     def get_observation_status(self, observation_id):
         """
@@ -265,3 +273,13 @@ class GenericObservationForm(forms.Form):
             'target_id': target.id,
             'params': self.serialize_parameters()
         }
+
+
+@dataclass
+class ObservingSite():
+    sitecode: str
+    facility: str
+    display_name: str
+    latitude: float
+    longitude: float
+    elevation: float

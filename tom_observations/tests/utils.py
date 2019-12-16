@@ -3,21 +3,12 @@ from datetime import timedelta
 from django.utils import timezone
 from astropy import units
 
-from tom_observations.facility import GenericObservationFacility, GenericObservationForm
+from tom_observations.facility import GenericObservationFacility, GenericObservationForm, ObservingSite
 
 # Site data matches built-in pyephem observer data for Los Angeles
 SITES = {
-    'Los Angeles': {
-        'latitude': 34.052222,
-        'longitude': -117.756306,
-        'elevation': 86.847092
-    },
-    'Siding Spring': {
-        'sitecode': 'coj',
-        'latitude': -31.272,
-        'longitude': 149.07,
-        'elevation': 1116
-    },
+    'la': ObservingSite('la', 'Fake Facility', 'Los Angeles', 34.052222, -117.756306, 86.847092),
+    'coj': ObservingSite('coj', 'FakeFacility', 'Siding Spring', -31.272, 149.07, 1116),
 }
 
 
@@ -34,6 +25,9 @@ class FakeFacility(GenericObservationFacility):
 
     def get_observing_sites(self):
         return SITES
+
+    def get_site(self, sitecode):
+        return SITES[sitecode]
 
     def get_observation_url(self, observation_id):
         return ''

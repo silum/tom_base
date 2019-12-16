@@ -1,7 +1,6 @@
 from io import StringIO
 import django_filters
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.management import call_command

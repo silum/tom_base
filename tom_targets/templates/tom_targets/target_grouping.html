@@ -23,8 +23,8 @@
     <tbody>
       {% for group in object_list %}
       <tr>
-        <td><button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}" title="View Group">{{ group.name }}</button></td>
-        <td valign="middle">{{ group.targets.count }}</td>        
+        <td><a href="{% url 'targets:view-group' group.id %}">{{ group.name }}</a></td>
+        <td valign="middle"><button type="submit" class="btn btn-link" name="targetlist__name" value="{{group.id}}" title="View Group">{{ group.targets.count }}</button></td>
         <td><a href="{% url 'targets:delete-group' group.id%}" title="Delete Group" class="btn btn-danger">Delete</a></td>
       </tr>
       {% empty %}

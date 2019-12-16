@@ -5,7 +5,7 @@ from dateutil.parser import parse
 from crispy_forms.layout import Layout, Div, HTML
 from astropy import units as u
 
-from tom_observations.facility import GenericObservationForm
+from tom_observations.facility import GenericObservationForm, ObservingSite
 from tom_common.exceptions import ImproperCredentialsException
 from tom_observations.facility import GenericObservationFacility
 from tom_targets.models import Target
@@ -42,20 +42,10 @@ TERMINAL_OBSERVING_STATES = ['TRIGGERED', 'ON_HOLD']
 FLUX_CONSTANT = (1 * u.erg) / (u.cm ** 2 * u.second * u.angstrom)
 WAVELENGTH_UNITS = u.angstrom
 
-SITES = {
-    'Cerro Pachon': {
-        'sitecode': 'cpo',
-        'latitude': -30.24075,
-        'longitude': -70.736694,
-        'elevation': 2722.
-    },
-    'Maunakea': {
-        'sitecode': 'mko',
-        'latitude': 19.8238,
-        'longitude': -155.46905,
-        'elevation': 4213.
-    }
-}
+SITES = [
+    ObservingSite('cpo', 'Gemini', 'Cerro Pachon', -30.24075, -70.736694, 2722),
+    ObservingSite('mko', 'Gemini', 'Maunakea', 19.8238, -155.46905, 4213)
+]
 
 
 def make_request(*args, **kwargs):

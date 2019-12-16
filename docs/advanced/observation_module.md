@@ -100,8 +100,8 @@ Try to click on the button for `MyFacility`.
 It should return an error that says everything it's missing:
 
 ```
-Can't instantiate abstract class MyObservationFacility with abstract methods 
-data_products, get_form, get_observation_status, get_observation_url, get_observing_sites, 
+Can't instantiate abstract class MyObservationFacility with abstract methods
+data_products, get_form, get_observation_status, get_observation_url, get_observing_sites,
 get_terminal_observing_states, submit_observation, validate_observation
 ```
 
@@ -120,7 +120,7 @@ class MyObservationFacility(GenericObservationFacility):
         return
     ...
 ```
-    
+
 Reload the server, click the `MyFacility` button, and you should get . . .
 a different error! Progress!
 
@@ -151,7 +151,7 @@ The second value of each tuple is what will be displayed on the webpage,
 as different tabs of observation types to submit.
 The first value of each tuple is what should be used to distinguish
 different observation types in your code.
-To see a demonstration of this, check out the 
+To see a demonstration of this, check out the
 [Las Cumbres Observatory](https://github.com/TOMToolkit/tom_base/blob/master/tom_observations/facilities/lco.py)
 facility's `observation_types` and `get_form`.
 
@@ -208,7 +208,7 @@ class MyObservationFacility(GenericObservationFacility):
         return ''
 
     def get_observing_sites(self):
-        return {}
+        return []
 
     def get_terminal_observing_states(self):
         return ['IN_PROGRESS', 'COMPLETED']
@@ -259,17 +259,13 @@ Modeling our `SITES` on the one defined for
 we can easily put new sites into the airmass plots:
 
 ```python
+from tom_observations.facility import ObservingSite
+
 class MyObservationFacility(GenericObservationFacility):
     name = 'MyFacility'
     observation_types = [('OBSERVATION', 'Custom Observation')]
 
-    SITES = {
-        'Itagaki': {
-            'latitude': 38.188020,
-            'longitude': 140.335113,
-            'elevation': 350
-        }
-    }
+    SITES = [ObservingSite('sitecode', 'Itagaki', 'Japan', 38.188020, 140.335113, 350)]
 
     ...
 

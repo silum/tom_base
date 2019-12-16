@@ -26,7 +26,7 @@ def export_targets(qs):
     # This is to construct enough row headers of format "name2, name3, name4, etc" for exporting aliases
     # The alias headers are then added to the set of fields for export
     max_alias_count = max([alias['count'] for alias
-                           in TargetName.objects.values('target_id').annotate(count=Count('target_id'))])
+                           in TargetName.objects.values('target_id').annotate(count=Count('target_id'))], default=1)
     all_fields = target_fields + target_extra_fields + [f'name{index+1}' for index in range(1, max_alias_count+1)]
     for key in ['id', 'targetlist', 'dataproduct', 'observationrecord', 'reduceddatum', 'aliases', 'targetextra']:
         all_fields.remove(key)

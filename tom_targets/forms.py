@@ -1,15 +1,18 @@
-from django import forms
 from astropy.coordinates import Angle
 from astropy import units as u
-from django.forms import ValidationError, inlineformset_factory
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Layout, Submit
+from django import forms
+from django.forms import ValidationError, inlineformset_factory, modelformset_factory
 from django.conf import settings
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm, get_groups_with_perms, remove_perm
 
 from .models import (
-    Target, TargetExtra, TargetName, SIDEREAL_FIELDS, NON_SIDEREAL_FIELDS, REQUIRED_SIDEREAL_FIELDS,
-    REQUIRED_NON_SIDEREAL_FIELDS, REQUIRED_NON_SIDEREAL_FIELDS_PER_SCHEME
+    Target, TargetExtra, TargetName, TargetList, TargetListTargets, SIDEREAL_FIELDS, NON_SIDEREAL_FIELDS,
+    REQUIRED_SIDEREAL_FIELDS, REQUIRED_NON_SIDEREAL_FIELDS, REQUIRED_NON_SIDEREAL_FIELDS_PER_SCHEME
 )
+from tom_observations.facility import get_service_class, get_service_classes
 
 
 def extra_field_to_form_field(field_type):
@@ -162,7 +165,32 @@ class TargetVisibilityForm(forms.Form):
             raise forms.ValidationError('Airmass plotting is only supported for sidereal targets')
 
 
+class TargetGroupingVisibilityForm(forms.Form):
+    start_date = forms.DateTimeField(required=True, label='Start', widget=forms.TextInput(attrs={'type': 'date'}))
+    end_date = forms.DateTimeField(required=True, label='End', widget=forms.TextInput(attrs={'type': 'date'}))
+    airmass = forms.DecimalField(required=True, label='Maximum Airmass')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        sites = []
+        for facility in get_service_classes():
+            sites += [(k, v.facility + ' - ' + v.display_name)
+                      for k, v in get_service_class(facility)().get_observing_sites().items()]
+        print(sites)
+        self.fields['site'] = forms.ChoiceField(required=True, choices=sites)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Show Visibility'))
+        self.helper.layout = Layout(
+            Div(
+                Div('sites', 'start_date', css_class='col'),
+                Div('airmass', 'end_date', css_class='col'),
+                css_class='form-row'
+            )
+        )
+
+
 TargetExtraFormset = inlineformset_factory(Target, TargetExtra, fields=('key', 'value'),
                                            widgets={'value': forms.TextInput()})
 TargetNamesFormset = inlineformset_factory(Target, TargetName, fields=('name',), validate_min=False, can_delete=True,
                                            extra=3)
+# TargetPriorityFormset = modelformset_factory(TargetListTargets, TargetList, fields=('priority'))

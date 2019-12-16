@@ -5,8 +5,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from astroplan import Observer, FixedTarget
-from astropy import units
 from astropy.coordinates import get_sun, SkyCoord
 from astropy.time import Time
 
@@ -106,6 +104,7 @@ class TestGetVisibility(TestCase):
     def setUp(self):
         self.sun = get_sun(Time(datetime(2019, 10, 9, 13, 56)))
         self.target = Target(
+            name='Test',
             ra=(self.sun.ra.deg + 180) % 360,
             dec=-(self.sun.dec.deg),
             type=Target.SIDEREAL
@@ -141,13 +140,13 @@ class TestGetVisibility(TestCase):
         invalid_target = self.target
         invalid_target.type = 'Invalid Type'
         end = self.start + timedelta(minutes=60)
-        airmass = get_sidereal_visibility(invalid_target, self.start, end, self.interval, self.airmass_limit)
+        airmass = get_sidereal_visibility([invalid_target], self.start, end, self.interval, self.airmass_limit)
         self.assertEqual(len(airmass), 0)
 
     def test_get_visibility_invalid_params(self):
         self.assertRaisesRegex(
             Exception, 'Start must be before end', get_sidereal_visibility,
-            self.target, datetime(2018, 10, 10), datetime(2018, 10, 9),
+            [self.target], datetime(2018, 10, 10), datetime(2018, 10, 9),
             self.interval, self.airmass_limit
         )
 
@@ -155,8 +154,10 @@ class TestGetVisibility(TestCase):
     def test_get_visibility_sidereal(self, mock_facility):
         mock_facility.return_value = {'Fake Facility': FakeFacility}
         end = self.start + timedelta(minutes=60)
-        airmass = get_sidereal_visibility(self.target, self.start, end, self.interval, self.airmass_limit)
-        airmass_data = airmass['(Fake Facility) Siding Spring'][1]
+        airmass = get_sidereal_visibility([self.target], self.start, end, self.interval, self.airmass_limit)
+        for site_airmass in airmass[self.target.name]:
+            if site_airmass['site'].sitecode == 'coj':
+                airmass_data = site_airmass['airmass_data'][1]
         expected_airmass = [
             1.2619096566629477, 1.2648181328558852, 1.2703522349950636, 1.2785703053923894,
             1.2895601364316183, 1.3034413026227516, 1.3203684217446099

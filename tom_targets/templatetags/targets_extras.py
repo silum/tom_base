@@ -5,20 +5,22 @@ from plotly import offline
 import plotly.graph_objs as go
 from astropy import units as u
 from astropy.coordinates import Angle
+from guardian.shortcuts import get_objects_for_user
 
 from tom_targets.models import Target, TargetExtra, TargetList
-from tom_targets.forms import TargetVisibilityForm
+from tom_targets.forms import TargetVisibilityForm, TargetGroupingVisibilityForm
 from tom_observations.utils import get_sidereal_visibility
+from tom_observations.facility import get_service_class, get_service_classes
 
 register = template.Library()
 
 
-@register.inclusion_tag('tom_targets/partials/recent_targets.html')
-def recent_targets(limit=10):
+@register.inclusion_tag('tom_targets/partials/recent_targets.html', takes_context=True)
+def recent_targets(context, limit=10):
     """
     Displays a list of the most recently created targets in the TOM up to the given limit, or 10 if not specified.
     """
-    return {'targets': Target.objects.all().order_by('-created')[:limit]}
+    return {'targets': get_objects_for_user(context['user'], 'tom_targets.view_target').order_by('-created')[:limit]}
 
 
 @register.inclusion_tag('tom_targets/partials/target_feature.html')
@@ -73,9 +75,16 @@ def target_plan(context):
                 airmass_limit = float(request.GET.get('airmass'))
             else:
                 airmass_limit = None
-            visibility_data = get_sidereal_visibility(context['object'], start_time, end_time, 10, airmass_limit)
+            visibility_data = get_sidereal_visibility([context['object']],
+                                                      start_time, end_time, 10, airmass_limit)
+            print(visibility_data[context['object'].name])
             plot_data = [
-                go.Scatter(x=data[0], y=data[1], mode='lines', name=site) for site, data in visibility_data.items()
+                go.Scatter(
+                    x=site_visibility['airmass_data'][0],
+                    y=site_visibility['airmass_data'][1],
+                    mode='lines',
+                    name=f"({site_visibility.get('site').facility}) {site_visibility['site'].display_name}"
+                ) for site_visibility in visibility_data[context['object'].name]
             ]
             layout = go.Layout(yaxis=dict(autorange='reversed'))
             visibility_graph = offline.plot(
@@ -84,6 +93,53 @@ def target_plan(context):
     return {
         'form': plan_form,
         'target': context['object'],
+        'visibility_graph': visibility_graph
+    }
+
+
+@register.inclusion_tag('tom_targets/partials/targetgrouping_plan.html', takes_context=True)
+def targetgrouping_plan(context):
+    request = context['request']
+    plan_form = TargetGroupingVisibilityForm()
+    visibility_graph = ''
+    if all(request.GET.get(x) for x in ['site', 'airmass', 'start_date', 'end_date']):
+        plan_form = TargetGroupingVisibilityForm({
+            'site': request.GET.get('site'),
+            'airmass': request.GET.get('airmass'),
+            'start_date': request.GET.get('start_date'),
+            'end_date': request.GET.get('end_date')
+        })
+        if plan_form.is_valid():
+            sitecode = request.GET['site']
+            start_date = parse(request.GET['start_date'])
+            end_date = parse(request.GET['end_date'])
+            airmass = float(request.GET['airmass'])
+            for facility_class in get_service_classes():
+                try:
+                    site = get_service_class(facility_class)().get_site(sitecode)
+                    break
+                except KeyError:
+                    pass
+            visibility = {}
+            visibility = get_sidereal_visibility(context['object'].targets.all(), start_date, end_date, 10,
+                                                 float(airmass), sites=[site])
+            plot_data = [
+                go.Scatter(
+                    x=data[0]['airmass_data'][0],
+                    y=data[0]['airmass_data'][1],
+                    mode='lines',
+                    name=target
+                ) for target, data in visibility.items()
+            ]
+            layout = go.Layout(title=f'Visibility at {site.display_name} on {start_date}',
+                               yaxis=dict(autorange='reversed'))
+            visibility_graph = offline.plot(
+                go.Figure(data=plot_data, layout=layout), output_type='div', show_link=False
+            )
+
+    return {
+        'form': plan_form,
+        'targetlist': context['object'],
         'visibility_graph': visibility_graph
     }
 
