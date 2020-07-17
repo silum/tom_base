@@ -1,0 +1,10 @@
+{% extends 'tom_common/base.html' %}
+{% load static %}
+{% block content %}
+<div class="alert alert-danger" role="alert">
+    You do not have permission to view the Query you are trying to view. Please login as a user with the correct permissions or contact your PI [403].
+</div>
+<a href="{% url 'home' %}" class="btn btn-outline-primary">Homepage</a>
+<a href="{% url 'alerts:list' %}" class="btn btn-outline-primary">Query List</a>
+<a href="{% url 'login' %}" class="btn btn-outline-primary">Login as another user</a>
+{% endblock %}

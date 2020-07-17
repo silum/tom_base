@@ -23,12 +23,11 @@ from django.views.generic import TemplateView, View
 from django_filters.views import FilterView
 from rest_framework import viewsets
 
-from guardian.mixins import PermissionListMixin
+from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
 from guardian.shortcuts import get_objects_for_user, get_groups_with_perms, assign_perm
 
 from tom_common.hints import add_hint
 from tom_common.hooks import run_hook
-from tom_common.mixins import Raise403PermissionRequiredMixin
 from tom_observations.observing_strategy import RunStrategyForm
 from tom_observations.models import ObservingStrategy
 from tom_targets.filters import TargetFilter
@@ -200,7 +199,7 @@ class TargetCreateView(LoginRequiredMixin, CreateView):
         return form
 
 
-class TargetUpdateView(Raise403PermissionRequiredMixin, UpdateView):
+class TargetUpdateView(PermissionRequiredMixin, UpdateView):
     """
     View that handles updating a target. Requires authorization.
     """
@@ -299,7 +298,7 @@ class TargetUpdateView(Raise403PermissionRequiredMixin, UpdateView):
         return form
 
 
-class TargetDeleteView(Raise403PermissionRequiredMixin, DeleteView):
+class TargetDeleteView(PermissionRequiredMixin, DeleteView):
     """
     View for deleting a target. Requires authorization.
     """
@@ -308,11 +307,12 @@ class TargetDeleteView(Raise403PermissionRequiredMixin, DeleteView):
     model = Target
 
 
-class TargetDetailView(Raise403PermissionRequiredMixin, DetailView):
+class TargetDetailView(PermissionRequiredMixin, DetailView):
     """
     View that handles the display of the target details. Requires authorization.
     """
     permission_required = 'tom_targets.view_target'
+    raise_exception = True
     model = Target
 
     def get_context_data(self, *args, **kwargs):
@@ -466,7 +466,7 @@ class TargetGroupingView(PermissionListMixin, ListView):
     paginate_by = 25
 
 
-class TargetGroupingDeleteView(Raise403PermissionRequiredMixin, DeleteView):
+class TargetGroupingDeleteView(PermissionRequiredMixin, DeleteView):
     """
     View that handles the deletion of ``TargetList`` objects, also known as target groups. Requires authorization.
     """

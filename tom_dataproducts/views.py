@@ -18,10 +18,10 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, DeleteView, FormView
 from django_filters.views import FilterView
 from guardian.shortcuts import assign_perm, get_objects_for_user
+from guardian.mixins import PermissionRequiredMixin
 
 from tom_common.hooks import run_hook
 from tom_common.hints import add_hint
-from tom_common.mixins import Raise403PermissionRequiredMixin
 from tom_dataproducts.models import DataProduct, DataProductGroup, ReducedDatum
 from tom_dataproducts.exceptions import InvalidFileFormatException
 from tom_dataproducts.forms import AddProductToGroupForm, DataProductUploadForm
@@ -145,7 +145,7 @@ class DataProductUploadView(LoginRequiredMixin, FormView):
         return redirect(form.cleaned_data.get('referrer', '/'))
 
 
-class DataProductDeleteView(Raise403PermissionRequiredMixin, DeleteView):
+class DataProductDeleteView(PermissionRequiredMixin, DeleteView):
     """
     View that handles the deletion of a ``DataProduct``. Requires authentication.
     """
@@ -156,12 +156,12 @@ class DataProductDeleteView(Raise403PermissionRequiredMixin, DeleteView):
     def get_required_permissions(self, request=None):
         if settings.TARGET_PERMISSIONS_ONLY:
             return None
-        return super(Raise403PermissionRequiredMixin, self).get_required_permissions(request)
+        return super().get_required_permissions(request)
 
     def check_permissions(self, request):
         if settings.TARGET_PERMISSIONS_ONLY:
             return False
-        return super(Raise403PermissionRequiredMixin, self).check_permissions(request)
+        return super().check_permissions(request)
 
     def get_success_url(self):
         """
