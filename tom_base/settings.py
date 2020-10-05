@@ -26,7 +26,7 @@ SECRET_KEY = 'dxja^_6p35x46dx0rx+c$(^31(10^n(twe1#ax3o8xl=n^p37q'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -54,9 +54,13 @@ INSTALLED_APPS = [
     'tom_observations',
     'tom_dataproducts',
     'tom_publications',
+    'django_plotly_dash.apps.DjangoPlotlyDashConfig',
+    'skip_dpd'
 ]
 
 SITE_ID = 1
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -164,6 +168,17 @@ CACHES = {
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, '_static')
+
+STATICFILES_FINDERS = [
+
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+
+    'django_plotly_dash.finders.DashAssetFinder',
+    'django_plotly_dash.finders.DashComponentFinder',
+    'django_plotly_dash.finders.DashAppDirectoryFinder',
+]
 MEDIA_ROOT = os.path.join(BASE_DIR, 'data')
 MEDIA_URL = '/data/'
 
@@ -216,10 +231,26 @@ TOM_FACILITY_CLASSES = [
     'tom_observations.facilities.soar.SOARFacility',
 ]
 
+
+TOM_ALERT_CLASSES = [
+    'tom_alerts.brokers.mars.MARSBroker',
+    'tom_alerts.brokers.lasair.LasairBroker',
+    'tom_alerts.brokers.scout.ScoutBroker',
+    'tom_alerts.brokers.tns.TNSBroker',
+    'tom_alerts.brokers.antares.ANTARESBroker',
+    'tom_alerts.brokers.gaia.GaiaBroker',
+    'tom_alerts.brokers.scimma.SCIMMABroker'
+]
+
+BROKER_CREDENTIALS = {'SCIMMA': {'Authorization': f'Token {os.getenv("SCIMMA_API_KEY")}'}}
+SKIP_API_KEY = os.getenv("SCIMMA_API_KEY")
+
 TOM_CADENCE_STRATEGIES = [
     'tom_observations.cadence.RetryFailedObservationsStrategy',
     'tom_observations.cadence.ResumeCadenceAfterFailureStrategy'
 ]
+
+DEFAULT_PAGE_SIZE = 20
 
 # Define extra target fields here. Types can be any of "number", "string", "boolean" or "datetime"
 # See https://tomtoolkit.github.io/docs/target_fields for documentation on this feature
@@ -271,6 +302,22 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100
 }
+
+PLOTLY_COMPONENTS = [
+    # Common components
+    'dash_core_components',
+    'dash_html_components',
+    'dash_renderer',
+
+    # django-plotly-dash components
+    'dpd_components',
+    # static support if serving local assets
+    # 'dpd_static_support',
+
+    # Other components, as needed
+    'dash_bootstrap_components',
+    'dash_table'
+]
 
 try:
     from local_settings import *  # noqa

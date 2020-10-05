@@ -255,3 +255,7 @@ class CreateTargetFromAlertView(LoginRequiredMixin, View):
             return redirect(reverse(
                 'tom_targets:list')
             )
+
+
+class SCIMMAView(TemplateView):
+    template_name = 'tom_alerts/scimma.html'
