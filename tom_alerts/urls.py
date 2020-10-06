@@ -13,6 +13,5 @@ urlpatterns = [
     path('query/<int:pk>/delete/', BrokerQueryDeleteView.as_view(), name='delete'),
     path('alert/create/', CreateTargetFromAlertView.as_view(), name='create-target'),
     path('scimma/', SCIMMAView.as_view(), name='scimma'),
-    path('django_plotly_dash/', include('django_plotly_dash.urls')),
     path('skip/', include('skip_dpd.urls', namespace='skip'))
 ]
