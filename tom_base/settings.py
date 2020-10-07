@@ -246,8 +246,8 @@ BROKER_CREDENTIALS = {'SCIMMA': {'Authorization': f'Token {os.getenv("SCIMMA_API
 SKIP_API_KEY = os.getenv("SCIMMA_API_KEY")
 
 TOM_CADENCE_STRATEGIES = [
-    'tom_observations.cadence.RetryFailedObservationsStrategy',
-    'tom_observations.cadence.ResumeCadenceAfterFailureStrategy'
+    'tom_observations.cadences.retry_failed_observations.RetryFailedObservationsStrategy',
+    'tom_observations.cadences.resume_cadence_after_failure.ResumeCadenceAfterFailureStrategy'
 ]
 
 DEFAULT_PAGE_SIZE = 20
