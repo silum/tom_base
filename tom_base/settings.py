@@ -73,6 +73,8 @@ MIDDLEWARE = [
     'tom_common.middleware.Raise403Middleware',
     'tom_common.middleware.ExternalServiceMiddleware',
     'tom_common.middleware.AuthStrategyMiddleware',
+    'django_plotly_dash.middleware.BaseMiddleware',
+
 ]
 
 ROOT_URLCONF = 'tom_common.urls'
