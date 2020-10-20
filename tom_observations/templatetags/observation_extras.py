@@ -270,3 +270,9 @@ def facility_status():
         facility_statuses.append(status)
 
     return {'facilities': facility_statuses}
+
+
+# TODO: move this to scimma external app
+@register.inclusion_tag('tom_observations/partials/submit_to_scimma.html')
+def submit_to_scimma(obj):
+    return {'observation_id': obj.id, 'model_name': obj._meta.label}

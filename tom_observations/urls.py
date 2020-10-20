@@ -4,7 +4,7 @@ from tom_observations.views import (AddExistingObservationView, ObservationCreat
                                     ObservationGroupCreateView, ObservationGroupDeleteView, ObservationGroupListView,
                                     ObservationListView, ObservationRecordDetailView, ObservationTemplateCreateView,
                                     ObservationTemplateDeleteView, ObservationTemplateListView,
-                                    ObservationTemplateUpdateView)
+                                    ObservationTemplateUpdateView, SubmitToSCiMMAView)
 
 app_name = 'tom_observations'
 
@@ -20,6 +20,7 @@ urlpatterns = [
     path('groups/create/', ObservationGroupCreateView.as_view(), name='group-create'),
     path('groups/list/', ObservationGroupListView.as_view(), name='group-list'),
     path('groups/<int:pk>/delete/', ObservationGroupDeleteView.as_view(), name='group-delete'),
+    path('scimma/<int:pk>/', SubmitToSCiMMAView.as_view(), name='scimma-submit'),
     path('<str:facility>/create/', ObservationCreateView.as_view(), name='create'),
     path('<int:pk>/update/', ObservationRecordUpdateView.as_view(), name='update'),
     path('<int:pk>/', ObservationRecordDetailView.as_view(), name='detail'),

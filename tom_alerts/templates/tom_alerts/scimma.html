@@ -7,15 +7,12 @@
 <body>
 <form method="POST" action="{% url 'tom_alerts:create-scimma-target' %}">
   {% csrf_token %}
-  <div class="">
-   <input type="submit" value="Create Targets" class="btn btn-primary"/>
- {%  comment %}
-      <div class="{% plotly_class name='SkipSwiftXRTDash' %}" style="height: 100%; width: 100%">
-       {% plotly_app name="SkipSwiftXRTDash" ratio=1 %}
-    </div>
-   {%  endcomment %}
-      {%plotly_direct name="SkipSwiftXRTDash"%}
+  <div class="{% plotly_class name='SkipAlertsDash' %}" style="height: 100%; width: 100%">
+    {% plotly_app name="SkipAlertsDash" ratio=1 %}
   </div>
+  {% comment %}
+  {% plotly_direct name="SkipSwiftXRTDash" %}
+  {%  endcomment %}
 </form>
 </body>
     <footer>

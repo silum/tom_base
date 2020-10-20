@@ -245,7 +245,7 @@ TOM_ALERT_CLASSES = [
 ]
 
 BROKER_CREDENTIALS = {'SCIMMA': {'Authorization': f'Token {os.getenv("SCIMMA_API_KEY")}'}}
-SKIP_API_KEY = os.getenv("SCIMMA_API_KEY")
+SKIP_API_KEY = os.getenv('SCIMMA_API_KEY')
 
 TOM_CADENCE_STRATEGIES = [
     'tom_observations.cadence.RetryFailedObservationsStrategy',
