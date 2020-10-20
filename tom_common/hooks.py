@@ -2,6 +2,8 @@ import logging
 from importlib import import_module
 
 from django.conf import settings
+from hop import Stream
+from hop.auth import Auth
 
 logger = logging.getLogger(__name__)
 
@@ -29,3 +31,15 @@ def target_post_save(target, created):
 
 def observation_change_state(observation, previous_state):
     logger.info('Observation change state hook: %s from %s to %s', observation, previous_state, observation.status)
+    if observation.terminal and previous_state != observation.status:
+        creds = settings.BROKER_CREDENTIALS['Hopskotch']
+        stream = Stream(auth=Auth(creds['username'], creds['password']))
+        message = {}
+
+        message = {'type': 'observation', 'parameters': observation.parameters_as_dict, 'status': observation.status,
+                   'target': observation.target.name, 'ra': observation.target.ra,
+                   'dec': observation.target.dec, 'facility': observation.facility}
+        with stream.open('kafka://dev.hop.scimma.org:9092/tomtoolkit-test', 'w') as s:
+            s.write(message)
+
+        logger.log(msg='Successfully submitted alert upstream to SCiMMA!', level=logging.INFO)

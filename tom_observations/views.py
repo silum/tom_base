@@ -645,8 +645,9 @@ class SubmitToSCiMMAView(LoginRequiredMixin, View):
             message = {'type': 'target', 'name': obj.name, 'ra': obj.ra, 'dec': obj.dec}
             url_namespace = 'tom_targets:detail'
         elif isinstance(obj, ObservationRecord):
-            message = {'type': 'observation', 'parameters': obj.parameters_as_dict, 'target': obj.target.name,
-                       'ra': obj.target.ra, 'dec': obj.target.dec, 'facility': obj.facility}    
+            message = {'type': 'observation', 'status': obj.status, 'parameters': obj.parameters_as_dict,
+                       'target': obj.target.name, 'ra': obj.target.ra, 'dec': obj.target.dec,
+                       'facility': obj.facility}
             url_namespace = 'tom_observations:detail'
         with stream.open('kafka://dev.hop.scimma.org:9092/tomtoolkit-test', 'w') as s:
             s.write(message)
