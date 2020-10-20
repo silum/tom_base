@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.layout import HTML, Layout, Submit
 from django import forms
+from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -20,6 +21,8 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from django.views.generic.list import ListView
 from guardian.shortcuts import get_objects_for_user, assign_perm
 from guardian.mixins import PermissionListMixin
+from hop import Stream
+from hop.auth import Auth
 
 from tom_common.hints import add_hint
 from tom_common.mixins import Raise403PermissionRequiredMixin
@@ -618,3 +621,36 @@ class ObservationTemplateDeleteView(LoginRequiredMixin, DeleteView):
     """
     model = ObservationTemplate
     success_url = reverse_lazy('tom_observations:template-list')
+
+
+# TODO: move this to scimma external app
+class SubmitToSCiMMAView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        model_name = request.GET.get('model_name')
+        obj = None
+        if not model_name:
+            raise Exception
+        else:
+            model = apps.get_model(model_name)
+            obj = model.objects.get(pk=kwargs['pk'])
+        if not obj:
+            raise Exception
+
+        creds = settings.BROKER_CREDENTIALS['Hopskotch']
+        stream = Stream(auth=Auth(creds['username'], creds['password']))
+        message = {}
+
+        if isinstance(obj, Target):
+            message = {'type': 'target', 'name': obj.name, 'ra': obj.ra, 'dec': obj.dec}
+            url_namespace = 'tom_targets:detail'
+        elif isinstance(obj, ObservationRecord):
+            message = {'type': 'observation', 'parameters': obj.parameters_as_dict, 'target': obj.target.name,
+                       'ra': obj.target.ra, 'dec': obj.target.dec, 'facility': obj.facility}    
+            url_namespace = 'tom_observations:detail'
+        with stream.open('kafka://dev.hop.scimma.org:9092/tomtoolkit-test', 'w') as s:
+            s.write(message)
+
+        messages.info(request, 'Successfully submitted alert upstream to SCiMMA!')
+
+        return redirect(reverse(url_namespace, kwargs={'pk': obj.id}))

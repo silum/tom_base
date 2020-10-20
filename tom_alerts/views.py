@@ -1,7 +1,7 @@
 import json
 
 from django.views.generic.edit import FormView, DeleteView
-from django.views.generic.base import TemplateView, View
+from django.views.generic.base import TemplateView, View, ContextMixin
 from django.db import IntegrityError
 from django.shortcuts import redirect, get_object_or_404
 from django.utils import timezone
@@ -259,3 +259,11 @@ class CreateTargetFromAlertView(LoginRequiredMixin, View):
 
 class SCIMMAView(TemplateView):
     template_name = 'tom_alerts/scimma.html'
+
+
+class SCIMMMACreateView(LoginRequiredMixin, View, ContextMixin):
+
+    def post(self, request, *args, **kwargs):
+        return redirect(reverse(
+                'tom_targets:list')
+            )

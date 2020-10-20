@@ -1,5 +1,22 @@
+<html>
 {% load plotly_dash static bootstrap4 %}
+    <head>
+    {% plotly_header %}
+    </head>
 
-<div class="{% plotly_class name='SkipSwiftXRTDash' %}" style="height: 100%; width: 100%">
-  {% plotly_app name="SkipSwiftXRTDash" ratio=1 %}
-</div>
+<body>
+<form method="POST" action="{% url 'tom_alerts:create-scimma-target' %}">
+  {% csrf_token %}
+  <div class="{% plotly_class name='SkipAlertsDash' %}" style="height: 100%; width: 100%">
+    {% plotly_app name="SkipAlertsDash" ratio=1 %}
+  </div>
+  {% comment %}
+  {% plotly_direct name="SkipSwiftXRTDash" %}
+  {%  endcomment %}
+</form>
+</body>
+    <footer>
+    {% plotly_footer %}
+    </footer>
+
+</html>
