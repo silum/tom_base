@@ -74,7 +74,7 @@ Plugin Architecture
 
 Some areas of the TOM implement a plugin based architecture to support multiple
 implementations of a similar functionality. An example would be the
-`tom_observations`` module in which every supported observatory is implemented
+``tom_observations`` module in which every supported observatory is implemented
 as its own plugin. The ``tom_catalogs`` and ``tom_alerts`` work in the same way: the
 module defines the interface and generic functionality and each implementation
 fills in its own logic.
@@ -264,7 +264,7 @@ DataProduct
 
 The ``DataProduct`` model can refer to a number of different things, but generally refers to a
 single file that is associated with a ``Target`` and optionally an ``ObservationRecord``. A
-`DataProduct`` has one of a number of tags, which at present include the following:
+``DataProduct`` has one of a number of tags, which at present include the following:
 
 - Photometry, a file containing photometric data
 - FITS, any FITS file not falling into the other categories
